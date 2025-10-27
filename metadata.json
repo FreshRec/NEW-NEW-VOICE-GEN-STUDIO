@@ -1,0 +1,7 @@
+{
+  "name": "VoiceGen Studio",
+  "description": "An application to extract text from audio/video sources, rewrite it using AI, and synthesize it into speech with various voices.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
