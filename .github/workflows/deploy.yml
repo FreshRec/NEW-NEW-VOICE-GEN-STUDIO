@@ -1,0 +1,34 @@
+name: Deploy to Yandex Object Storage
+
+on:
+  push:
+    branches:
+      - main  # Запускать при пуше в ветку main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18' # Укажите вашу версию Node.js
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build project
+        run: npm run build
+
+      - name: Upload to Yandex Object Storage
+        uses: yc-actions/yc-s3-upload-action@v1.1
+        with:
+          yc_key_id: ${{ secrets.YC_KEY_ID }}
+          yc_secret_key: ${{ secrets.YC_SECRET_KEY }}
+          bucket: 'voicegen-studio-site' # <-- УКАЖИТЕ ИМЯ ВАШЕГО БАКЕТА
+          source_dir: 'dist' # <-- УКАЖИТЕ ПАПКУ СБОРКИ (dist или build)
+          delete_removed: 'true' # Удалять старые файлы
