@@ -43,7 +43,7 @@ jobs:
       - name: Inject Google API Key
         run: |
           find ./dist -type f -name "*.js" -exec \
-          sed -i 's|process.env.API_KEY|"${{ secrets.API_KEY }}"|g' {} +
+          sed -i 's|__GOOGLE_API_KEY__|${{ secrets.API_KEY }}|g' {} +
       
       - name: Sync files to Yandex Object Storage
         env:
