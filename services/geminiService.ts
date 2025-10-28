@@ -1,4 +1,4 @@
-import { GoogleGenAI, Modality } from "@google/ai";
+import { GoogleGenAI, Modality } from "@google/genai";
 
 let ai: GoogleGenAI | null = null;
 
@@ -113,10 +113,10 @@ export const synthesizeSpeech = async (
             prebuiltVoiceConfig: {
               voiceName: voice,
             },
-            // FIX: Moved speakingRate and pitch properties inside the voiceConfig object.
-            speakingRate: speakingRate,
-            pitch: pitch,
           },
+          // FIX: Moved speakingRate and pitch outside of voiceConfig, as they are properties of speechConfig.
+          speakingRate: speakingRate,
+          pitch: pitch,
         },
       },
     });
