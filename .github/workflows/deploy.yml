@@ -42,7 +42,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_KEY }}
           AWS_DEFAULT_REGION: 'ru-central1'
         run: |
-          # ВАЖНО: Замените 'voicegen-studio-site' на ВАШЕ реальное имя бакета из Yandex Cloud!
-          aws s3 sync ./dist s3://voicegen-studio \
+          
+          aws s3 sync ./dist s3://b1gfjqt37bh45i2g6dbs \
             --endpoint-url https://storage.yandexcloud.net \
             --delete
