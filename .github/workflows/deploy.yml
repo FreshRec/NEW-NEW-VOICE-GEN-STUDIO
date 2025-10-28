@@ -25,10 +25,17 @@ jobs:
         run: npm run build
 
       - name: Upload to Yandex Object Storage
-        uses: yc-actions/yc-s3-upload-action@v1.1
+        # Используем популярное и проверенное действие для S3-совместимых хранилищ
+        uses: w-s-l/s3-sync-action@v2.2.0
         with:
-          yc_key_id: ${{ secrets.YC_KEY_ID }}
-          yc_secret_key: ${{ secrets.YC_SECRET_KEY }}
-          bucket: 'voicegen-studio-site' # <-- УКАЖИТЕ ИМЯ ВАШЕГО БАКЕТА
-          source_dir: 'dist' # <-- УКАЖИТЕ ПАПКУ СБОРКИ (dist или build)
-          delete_removed: 'true' # Удалять старые файлы
+          # Настройки для загрузки
+          bucket: 'voicegen-studio-site' # <-- УКАЖИТЕ ТОЧНОЕ ИМЯ ВАШЕГО БАКЕТА
+          source_dir: 'dist' # <-- Папка с собранным проектом. Если у вас 'build', измените здесь
+          delete_removed: 'true' # Удалять из бакета старые файлы, которых нет в новой сборке
+        env:
+          # Здесь мы "подсказываем" действию, как подключиться к Яндексу
+          # Оно ожидает переменные с префиксом AWS_, но мы передаем в них ваши ключи от Яндекса
+          AWS_ACCESS_KEY_ID: ${{ secrets.YC_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_KEY }}
+          AWS_S3_ENDPOINT: 'https://storage.yandexcloud.net'
+          AWS_DEFAULT_REGION: 'ru-central1' # Этот параметр можно не менять
