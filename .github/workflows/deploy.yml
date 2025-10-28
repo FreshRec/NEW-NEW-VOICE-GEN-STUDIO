@@ -25,8 +25,6 @@ jobs:
         run: npm run build
 
       - name: Check if secrets are loaded
-        # Этот шаг остановит развертывание, если ключи не настроены в GitHub
-        # Он не выводит сами ключи в лог из соображений безопасности
         run: |
           if [ -z "${{ secrets.API_KEY }}" ]; then echo "::error::Секрет API_KEY не найден в настройках репозитория GitHub!"; exit 1; fi
           if [ -z "${{ secrets.YC_KEY_ID }}" ]; then echo "::error::Секрет YC_KEY_ID не найден в настройках репозитория GitHub!"; exit 1; fi
@@ -34,21 +32,15 @@ jobs:
           echo "Все секреты успешно загружены."
 
       - name: Inject Google API Key into built files
-        # Заменяем 'process.env.API_KEY' на реальный ключ
-        # Убедитесь, что ваша папка сборки называется 'dist'
         run: |
           find ./dist -type f -name "*.js" -exec \
           sed -i 's|process.env.API_KEY|"${{ secrets.API_KEY }}"|g' {} +
       
-      - name: Configure AWS Credentials for Yandex Cloud
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.YC_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.YC_SECRET_KEY }}
-          aws-region: 'ru-central1'
-
       - name: Sync files to Yandex Object Storage
-        # Убедитесь, что имя бакета 'voicegen-studio-site' совпадает с вашим
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.YC_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_KEY }}
+          AWS_DEFAULT_REGION: 'ru-central1'
         run: |
           aws s3 sync ./dist s3://voicegen-studio-site \
             --endpoint-url https://storage.yandexcloud.net \
