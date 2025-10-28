@@ -1,8 +1,8 @@
-import { GoogleGenAI, Modality } from "@google/ai";
+import { GoogleGenAI, Modality } from "@google/genai";
 import { Mood } from '../types';
 
 // Fix: Initialize with process.env.API_KEY as per guidelines.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: '__GOOGLE_API_KEY__' });
 
 /**
  * Transcribes an audio or video file using the Gemini API.
@@ -123,7 +123,6 @@ export const synthesizeSpeech = async (
       config: {
         responseModalities: [Modality.AUDIO],
         speechConfig: {
-          // Fix: Removed speakingRate and pitch as they are not supported properties.
           voiceConfig: {
             prebuiltVoiceConfig: { 
               voiceName: voice,
