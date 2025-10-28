@@ -25,8 +25,8 @@ export const transcribeAudio = async (
     };
 
     const prompt = enableDiarization
-      ? "Transcribe this audio. Please identify and label each speaker (e.g., Speaker 1, Speaker 2)."
-      : "Transcribe this audio.";
+      ? "Транскрибируй это аудио. Пожалуйста, определи и обозначь каждого диктора (например, Диктор 1, Диктор 2)."
+      : "Транскрибируй это аудио.";
 
     const textPart = { text: prompt };
 
@@ -51,7 +51,7 @@ export const rewriteText = async (text: string): Promise<string> => {
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: `Rewrite the following text to improve its clarity and style, while preserving the original meaning. Do not add any introductory phrases like "Here's the rewritten text:". Just provide the rewritten text directly.\n\nOriginal text:\n"""\n${text}\n"""`,
+      contents: `Перепиши следующий текст, чтобы улучшить его ясность и стиль, сохранив при этом первоначальный смысл. Не добавляй никаких вводных фраз, таких как "Вот переписанный текст:". Просто предоставь переписанный текст напрямую.\n\nОригинальный текст:\n"""\n${text}\n"""`,
       config: {
         temperature: 0.7,
       }
@@ -72,7 +72,7 @@ export const generatePoem = async (text: string): Promise<string> => {
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: `Based on the following text, write a short, creative poem. The poem should capture the essence and mood of the text. Do not add any introductory phrases like "Here is a poem:". Just provide the poem directly.\n\nText:\n"""\n${text}\n"""`,
+      contents: `На основе следующего текста напиши короткое, творческое стихотворение на русском языке. Стихотворение должно отражать суть и настроение текста. Не добавляй никаких вводных фраз, таких как "Вот стихотворение:". Просто предоставь стихотворение напрямую.\n\nТекст:\n"""\n${text}\n"""`,
       config: {
         temperature: 0.9,
       }
