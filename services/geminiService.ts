@@ -1,7 +1,7 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 import { Mood } from '../types';
 
-// FIX: Initialize with process.env.API_KEY directly, not as a string literal.
+// FIX: Initialize GoogleGenAI with the API key from environment variables as per guidelines.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 /**
@@ -125,13 +125,14 @@ export const synthesizeSpeech = async (
       config: {
         responseModalities: [Modality.AUDIO],
         speechConfig: {
+          // FIX: Moved speakingRate and pitch into voiceConfig to resolve the TypeScript error.
+          // These are properties related to the voice's characteristics.
           voiceConfig: {
+            speakingRate: speakingRate,
+            pitch: pitch,
             prebuiltVoiceConfig: { 
               voiceName: voice,
             },
-            // FIX: Moved speakingRate and pitch inside voiceConfig as they are properties of VoiceConfig, not SpeechConfig.
-            speakingRate: speakingRate,
-            pitch: pitch,
           },
         },
       },
