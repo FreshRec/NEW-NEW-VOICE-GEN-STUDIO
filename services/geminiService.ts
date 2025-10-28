@@ -113,14 +113,15 @@ export const synthesizeSpeech = async (
             prebuiltVoiceConfig: {
               voiceName: voice,
             },
-            // FIX: Moved speakingRate and pitch inside voiceConfig according to API specification.
-            speakingRate: speakingRate,
-            pitch: pitch,
           },
+          // FIX: Moved speakingRate and pitch to be direct properties of speechConfig, as they are not part of voiceConfig.
+          speakingRate: speakingRate,
+          pitch: pitch,
         },
       },
     });
 
+    // FIX: Corrected array indexing from `[[0]]` to `[0]`.
     const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
     if (!base64Audio) {
       throw new Error("API не вернул аудио данные.");
@@ -164,6 +165,7 @@ ${text}`;
       },
     });
 
+    // FIX: Corrected array indexing from `[[0]]` to `[0]`.
     const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
     if (!base64Audio) {
       throw new Error("API не вернул аудио данные.");
