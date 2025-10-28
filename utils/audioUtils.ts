@@ -25,8 +25,6 @@ export function decode(base64: string): Uint8Array {
   return bytes;
 }
 
-// FIX: Updated decodeAudioData to correctly handle raw PCM audio streams from the API.
-// It now accepts sampleRate and numChannels to create an accurate AudioBuffer.
 export async function decodeAudioData(
   data: Uint8Array,
   ctx: AudioContext,
