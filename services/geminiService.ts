@@ -2,8 +2,14 @@ import { GoogleGenAI, Modality } from "@google/genai";
 
 let ai: GoogleGenAI;
 
+// --- API Key is managed via process.env.API_KEY as per guidelines ---
+
+// --- Инициализация AI клиента ---
+
 function getAi() {
   if (!ai) {
+    // FIX: API key must be obtained from process.env.API_KEY.
+    // This removes the need for UI-based key management.
     if (!process.env.API_KEY) {
       throw new Error("API_KEY_MISSING");
     }
@@ -16,7 +22,8 @@ const handleGeminiError = (error: unknown, defaultMessage: string): Error => {
     console.error(defaultMessage, error);
     if (error instanceof Error) {
         if (error.message === "API_KEY_MISSING") {
-            return new Error("Ключ API не настроен. Пожалуйста, установите переменную окружения API_KEY в настройках вашего проекта.");
+            // FIX: Updated error message to reflect env var usage.
+            return new Error("Ключ API не настроен. Убедитесь, что переменная окружения API_KEY установлена.");
         }
         if (error.message.includes('API key not valid')) {
             return new Error("Неверный API ключ. Пожалуйста, проверьте ваш API ключ.");
@@ -107,10 +114,11 @@ export const synthesizeSpeech = async (
           voiceConfig: {
             prebuiltVoiceConfig: {
               voiceName: voice,
-              speakingRate: speakingRate,
-              pitch: pitch,
             },
           },
+          // FIX: Moved speakingRate and pitch to be direct properties of speechConfig, not voiceConfig.
+          speakingRate: speakingRate,
+          pitch: pitch,
         },
       },
     });
