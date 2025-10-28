@@ -24,18 +24,25 @@ jobs:
       - name: Build project
         run: npm run build
 
+      - name: Inject Google API Key into built files
+        # Этот шаг находит все JS файлы в папке сборки и заменяет 'process.env.API_KEY'
+        # на ваш реальный ключ из секретов GitHub.
+        # Если ваша папка сборки называется 'build', а не 'dist', измените './dist' на './build'.
+        run: |
+          find ./dist -type f -name "*.js" -exec \
+          sed -i 's|process.env.API_KEY|"${{ secrets.API_KEY }}"|g' {} +
+      
       - name: Configure AWS Credentials for Yandex Cloud
+        # Используем официальное действие для настройки ключей
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.YC_KEY_ID }}
           aws-secret-access-key: ${{ secrets.YC_SECRET_KEY }}
-          aws-region: 'ru-central1' # Этот регион является стандартным для Yandex Cloud
+          aws-region: 'ru-central1'
 
       - name: Sync files to Yandex Object Storage
+        # Убедитесь, что имя бакета 'voicegen-studio-site' совпадает с вашим
         run: |
           aws s3 sync ./dist s3://voicegen-studio-site \
             --endpoint-url https://storage.yandexcloud.net \
             --delete
-        env:
-          # Указываем регион еще раз для CLI
-          AWS_DEFAULT_REGION: 'ru-central1'
