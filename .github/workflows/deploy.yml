@@ -43,6 +43,6 @@ jobs:
           AWS_DEFAULT_REGION: 'ru-central1'
         run: |
           # ВАЖНО: Замените 'voicegen-studio-site' на ВАШЕ реальное имя бакета из Yandex Cloud!
-          aws s3 sync ./dist s3://voicegen-studio \
+          aws s3 sync ./dist s3://voicegen-studio-site \
             --endpoint-url https://storage.yandexcloud.net \
             --delete
