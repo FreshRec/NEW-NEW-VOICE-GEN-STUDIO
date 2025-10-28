@@ -4,27 +4,17 @@ import TranscriptionTab from './components/TranscriptionTab';
 import EditorTab from './components/EditorTab';
 import TabButton from './components/TabButton';
 import { MicIcon, PencilIcon } from './components/icons';
-// FIX: Removed API key management imports as the key is now handled by environment variables, per guidelines.
 
 type Tab = 'transcribe' | 'edit';
-
-// FIX: Removed ApiKeyErrorScreen component. The UI should not prompt for an API key.
-// The API key must be provided via the `process.env.API_KEY` environment variable.
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('transcribe');
   const [text, setText] = useState<string>('');
-  
-  // FIX: Removed all state and effects related to checking for a user-provided API key.
-  // The application now assumes the API key is correctly configured in the environment.
 
   const handleTranscriptionComplete = (transcribedText: string) => {
     setText(transcribedText);
     setActiveTab('edit');
   };
-
-  // FIX: Removed conditional rendering for loading and API key screen.
-  // The main application UI is rendered directly.
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-200 font-sans">
