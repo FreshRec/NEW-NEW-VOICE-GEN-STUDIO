@@ -1,8 +1,8 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 import { Mood } from '../types';
 
-// Fix: Initialize the GoogleGenAI client according to the guidelines.
-// This client will be used by all the service functions.
+// Используем специальный плейсхолдер, который будет заменен при развертывании
+// FIX: Initialize GoogleGenAI with API_KEY from environment variables as per guidelines.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 /**
@@ -31,7 +31,6 @@ export const transcribeAudio = async (
 
     const textPart = { text: prompt };
 
-    // Fix: Use a model that supports audio/video input. gemini-2.5-pro is a good choice for accuracy.
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-pro',
       contents: { parts: [audioPart, textPart] },
@@ -51,7 +50,6 @@ export const transcribeAudio = async (
  */
 export const rewriteText = async (text: string): Promise<string> => {
   try {
-    // Fix: Implement text rewriting using gemini-2.5-flash for speed and efficiency.
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: `Rewrite the following text to improve its clarity and style, while preserving the original meaning. Do not add any introductory phrases like "Here's the rewritten text:". Just provide the rewritten text directly.\n\nOriginal text:\n"""\n${text}\n"""`,
@@ -73,7 +71,6 @@ export const rewriteText = async (text: string): Promise<string> => {
  */
 export const generatePoem = async (text: string): Promise<string> => {
   try {
-    // Fix: Implement poem generation, a creative task suitable for gemini-2.5-flash.
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: `Based on the following text, write a short, creative poem. The poem should capture the essence and mood of the text. Do not add any introductory phrases like "Here is a poem:". Just provide the poem directly.\n\nText:\n"""\n${text}\n"""`,
@@ -116,14 +113,13 @@ export const synthesizeSpeech = async (
     text: string, 
     voice: string, 
     mood: Mood, 
-    speakingRate: number, // Note: speakingRate and pitch are not directly supported by the API
+    speakingRate: number,
     pitch: number
 ): Promise<string> => {
   try {
     const moodPrefix = getMoodPrefix(mood);
     const prompt = `${moodPrefix}${text}`;
 
-    // Fix: Implement single-speaker text-to-speech using the specified model and config.
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-preview-tts',
       contents: [{ parts: [{ text: prompt }] }],
@@ -131,8 +127,13 @@ export const synthesizeSpeech = async (
         responseModalities: [Modality.AUDIO],
         speechConfig: {
           voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: voice },
+            prebuiltVoiceConfig: { 
+              voiceName: voice,
+            },
           },
+          // FIX: speakingRate and pitch are properties of speechConfig, not voiceConfig.
+          speakingRate: speakingRate,
+          pitch: pitch,
         },
       },
     });
@@ -173,7 +174,6 @@ export const synthesizeMultiSpeakerSpeech = async (
         const speakers = Object.keys(speakerVoices).join(' and ');
         const prompt = `TTS the following conversation between ${speakers}:\n${text}`;
 
-        // Fix: Implement multi-speaker TTS, building the config from the provided speaker voices.
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash-preview-tts",
             contents: [{ parts: [{ text: prompt }] }],
