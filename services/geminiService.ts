@@ -1,7 +1,7 @@
-import { GoogleGenAI, Modality } from "@google/genai";
+import { GoogleGenAI, Modality } from "@google/ai";
 import { Mood } from '../types';
 
-// FIX: Initialize GoogleGenAI with the API key from environment variables as per guidelines.
+// Fix: Initialize with process.env.API_KEY as per guidelines.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 /**
@@ -111,9 +111,7 @@ const getMoodPrefix = (mood: Mood): string => {
 export const synthesizeSpeech = async (
     text: string, 
     voice: string, 
-    mood: Mood, 
-    speakingRate: number,
-    pitch: number
+    mood: Mood
 ): Promise<string> => {
   try {
     const moodPrefix = getMoodPrefix(mood);
@@ -125,11 +123,8 @@ export const synthesizeSpeech = async (
       config: {
         responseModalities: [Modality.AUDIO],
         speechConfig: {
-          // FIX: Moved speakingRate and pitch into voiceConfig to resolve the TypeScript error.
-          // These are properties related to the voice's characteristics.
+          // Fix: Removed speakingRate and pitch as they are not supported properties.
           voiceConfig: {
-            speakingRate: speakingRate,
-            pitch: pitch,
             prebuiltVoiceConfig: { 
               voiceName: voice,
             },
