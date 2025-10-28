@@ -1,9 +1,33 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+let ai: GoogleGenAI;
+
+function getAi() {
+  if (!ai) {
+    if (!process.env.API_KEY) {
+      throw new Error("API_KEY_MISSING");
+    }
+    ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  }
+  return ai;
+}
+
+const handleGeminiError = (error: unknown, defaultMessage: string): Error => {
+    console.error(defaultMessage, error);
+    if (error instanceof Error) {
+        if (error.message === "API_KEY_MISSING") {
+            return new Error("Ключ API не настроен. Пожалуйста, установите переменную окружения API_KEY в настройках вашего проекта.");
+        }
+        if (error.message.includes('API key not valid')) {
+            return new Error("Неверный API ключ. Пожалуйста, проверьте ваш API ключ.");
+        }
+    }
+    return new Error(defaultMessage);
+};
 
 export const transcribeAudio = async (base64Data: string, mimeType: string, enableDiarization: boolean): Promise<string> => {
   try {
+    const ai = getAi();
     const model = 'gemini-2.5-pro'; 
 
     const prompt = enableDiarization 
@@ -31,39 +55,35 @@ export const transcribeAudio = async (base64Data: string, mimeType: string, enab
     }
     return transcription;
   } catch (error) {
-    console.error("Ошибка при транскрибации:", error);
-    if (error instanceof Error && error.message.includes('API key not valid')) {
-        throw new Error("Неверный API ключ. Пожалуйста, проверьте ваш API ключ.");
-    }
-    throw new Error("Не удалось транскрибировать аудио. Пожалуйста, попробуйте еще раз.");
+    throw handleGeminiError(error, "Не удалось транскрибировать аудио. Пожалуйста, попробуйте еще раз.");
   }
 };
 
 export const rewriteText = async (text: string): Promise<string> => {
     if (!text.trim()) return '';
     try {
+        const ai = getAi();
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-pro',
             contents: `Перепиши следующий текст, чтобы он стал более ясным, лаконичным и увлекательным. Не добавляй никакого вступления или заключения, просто верни переписанный текст. Вот текст: "${text}"`,
         });
         return response.text;
     } catch (error) {
-        console.error("Ошибка при переписывании текста:", error);
-        throw new Error("Не удалось переписать текст.");
+        throw handleGeminiError(error, "Не удалось переписать текст.");
     }
 };
 
 export const generatePoem = async (text: string): Promise<string> => {
     if (!text.trim()) return '';
     try {
+        const ai = getAi();
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-pro',
             contents: `Ты талантливый поэт. Напиши красивое стихотворение, вдохновленное следующей строкой или идеей. Не добавляй никакого вступления или заключения, просто верни стихотворение. Вот строка: "${text}"`,
         });
         return response.text;
     } catch (error) {
-        console.error("Ошибка при генерации стихотворения:", error);
-        throw new Error("Не удалось сгенерировать стихотворение.");
+        throw handleGeminiError(error, "Не удалось сгенерировать стихотворение.");
     }
 };
 
@@ -75,7 +95,7 @@ export const synthesizeSpeech = async (
   pitch: number
 ): Promise<string> => {
   try {
-    // FIX: Updated the prompt for single-speaker synthesis for better reliability.
+    const ai = getAi();
     const prompt = `Озвучь следующий текст ${mood}: ${text}`;
 
     const response = await ai.models.generateContent({
@@ -85,7 +105,6 @@ export const synthesizeSpeech = async (
         responseModalities: [Modality.AUDIO],
         speechConfig: {
           voiceConfig: {
-            // FIX: Moved speakingRate and pitch into the prebuiltVoiceConfig object to resolve the type error.
             prebuiltVoiceConfig: {
               voiceName: voice,
               speakingRate: speakingRate,
@@ -102,11 +121,7 @@ export const synthesizeSpeech = async (
     }
     return base64Audio;
   } catch (error) {
-    console.error("Ошибка при синтезе речи:", error);
-    if (error instanceof Error && error.message.includes('API key not valid')) {
-        throw new Error("Неверный API ключ. Пожалуйста, проверьте ваш API ключ.");
-    }
-    throw new Error("Не удалось синтезировать речь. Пожалуйста, попробуйте еще раз.");
+    throw handleGeminiError(error, "Не удалось синтезировать речь. Пожалуйста, попробуйте еще раз.");
   }
 };
 
@@ -115,6 +130,7 @@ export const synthesizeMultiSpeakerSpeech = async (
   speakerVoices: Record<string, string>
 ): Promise<string> => {
   try {
+    const ai = getAi();
     const speakerVoiceConfigs = Object.entries(speakerVoices).map(([speaker, voice]) => ({
       speaker,
       voiceConfig: {
@@ -148,10 +164,6 @@ ${text}`;
     }
     return base64Audio;
   } catch (error) {
-    console.error("Ошибка при синтезе речи с несколькими дикторами:", error);
-    if (error instanceof Error && error.message.includes('API key not valid')) {
-      throw new Error("Неверный API ключ. Пожалуйста, проверьте ваш API ключ.");
-    }
-    throw new Error("Не удалось синтезировать речь с несколькими дикторами. Убедитесь, что в тексте ровно два диктора.");
+    throw handleGeminiError(error, "Не удалось синтезировать речь с несколькими дикторами. Убедитесь, что в тексте ровно два диктора.");
   }
 };
