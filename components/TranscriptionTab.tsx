@@ -1,17 +1,12 @@
 import React, { useState, useCallback } from 'react';
-// FIX: Corrected import path for geminiService to be relative.
 import { transcribeAudio } from '../services/geminiService';
 import { fileToBase64 } from '../utils/audioUtils';
 import Spinner from './Spinner';
-// FIX: Corrected import path for icons to be relative.
 import { UploadIcon, InfoIcon, YoutubeIcon, DownloadArrowIcon } from './icons';
 
 interface TranscriptionTabProps {
   onTranscriptionComplete: (text: string) => void;
 }
-
-// Removed MAX_FILE_SIZE constant
-// const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 
 const TranscriptionTab: React.FC<TranscriptionTabProps> = ({ onTranscriptionComplete }) => {
   const [file, setFile] = useState<File | null>(null);
@@ -35,14 +30,6 @@ const TranscriptionTab: React.FC<TranscriptionTabProps> = ({ onTranscriptionComp
       return;
     }
 
-    // Removed file size check
-    /*
-    if (selectedFile.size > MAX_FILE_SIZE) {
-      setError(`Файл слишком большой. Максимальный размер: ${MAX_FILE_SIZE / (1024 * 1024)} МБ.`);
-      setFile(null);
-      return;
-    }
-    */
     setError(null);
     setFile(selectedFile);
   };
