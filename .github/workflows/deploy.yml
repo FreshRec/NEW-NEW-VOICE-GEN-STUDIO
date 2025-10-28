@@ -11,7 +11,6 @@ jobs:
 
     steps:
       - name: Check for Secrets
-        # Этот шаг останавливает выполнение, если секреты не настроены
         run: |
           if [ -z "${{ secrets.API_KEY }}" ]; then
             echo "::error::Secret API_KEY is not set in GitHub repository settings!"
@@ -42,17 +41,17 @@ jobs:
         run: npm run build
 
       - name: Inject Google API Key
-        # Этот шаг заменяет плейсхолдер в собранных файлах на реальный ключ
         run: |
           find ./dist -type f -name "*.js" -exec \
-          sed -i 's|__GOOGLE_API_KEY__|${{ secrets.API_KEY }}|g' {} +
+          sed -i 's|process.env.API_KEY|"${{ secrets.API_KEY }}"|g' {} +
       
       - name: Sync files to Yandex Object Storage
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.YC_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_KEY }}
-          AWS_S3_ENDPOINT: https://storage.yandexcloud.net
           AWS_DEFAULT_REGION: ru-central1
         run: |
-          # ВАЖНО: Это имя вашего бакета. Убедитесь, что оно верное.
-          aws s3 sync ./dist s3://voicegen-studio --delete
+          # ВАЖНО: Убедитесь, что 'voicegen-studio' — это ваше реальное имя бакета.
+          aws s3 sync ./dist s3://voicegen-studio \
+            --endpoint-url https://storage.yandexcloud.net \
+            --delete
