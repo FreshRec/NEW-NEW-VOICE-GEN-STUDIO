@@ -66,8 +66,6 @@ const EditorTab: React.FC<EditorTabProps> = ({ initialText, onTextChange }) => {
   const [text, setText] = useState(initialText);
   const [selectedVoice, setSelectedVoice] = useState(VOICES[0].id);
   const [selectedMood, setSelectedMood] = useState<Mood>(MOODS[0].id);
-  const [speakingRate, setSpeakingRate] = useState(1.0);
-  const [pitch, setPitch] = useState(0);
   const [status, setStatus] = useState({ loading: false, message: '', type: '' });
   const [error, setError] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -227,7 +225,8 @@ const EditorTab: React.FC<EditorTabProps> = ({ initialText, onTextChange }) => {
       if (speakers.length === 2) {
         base64Audio = await synthesizeMultiSpeakerSpeech(text, speakerVoices);
       } else {
-        base64Audio = await synthesizeSpeech(text, selectedVoice, selectedMood, speakingRate, pitch);
+        // Fix: Removed speakingRate and pitch as they are not supported by the API.
+        base64Audio = await synthesizeSpeech(text, selectedVoice, selectedMood);
       }
       const audioData = decode(base64Audio);
       const buffer = await decodeAudioData(audioData, audioContextRef.current, 24000, 1);
@@ -368,42 +367,6 @@ const EditorTab: React.FC<EditorTabProps> = ({ initialText, onTextChange }) => {
                     <select value={selectedMood} onChange={(e) => setSelectedMood(e.target.value as Mood)} disabled={isMultiSpeaker} className="w-full px-4 py-3 bg-gray-900/50 border border-gray-600 rounded-lg text-white focus:ring-cyan-500 focus:border-cyan-500 transition appearance-none disabled:bg-gray-800 disabled:cursor-not-allowed">
                         {MOODS.map(mood => <option key={mood.id} value={mood.id}>{mood.name}</option>)}
                     </select>
-                </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
-                <div className="relative" title={isMultiSpeaker ? "Недоступно в режиме нескольких дикторов" : ""}>
-                     <label htmlFor="speed-slider" className="flex justify-between items-center text-sm font-medium text-gray-300 mb-1">
-                         <span>Скорость чтения</span>
-                         <span className="font-mono text-cyan-400">{speakingRate.toFixed(2)}x</span>
-                     </label>
-                     <input
-                         id="speed-slider"
-                         type="range"
-                         min="0.5"
-                         max="2.0"
-                         step="0.05"
-                         value={speakingRate}
-                         onChange={(e) => setSpeakingRate(parseFloat(e.target.value))}
-                         disabled={isMultiSpeaker}
-                         className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer range-thumb-cyan disabled:cursor-not-allowed"
-                     />
-                </div>
-                <div className="relative" title={isMultiSpeaker ? "Недоступно в режиме нескольких дикторов" : ""}>
-                     <label htmlFor="pitch-slider" className="flex justify-between items-center text-sm font-medium text-gray-300 mb-1">
-                         <span>Высота голоса</span>
-                         <span className="font-mono text-cyan-400">{pitch.toFixed(1)}</span>
-                     </label>
-                     <input
-                         id="pitch-slider"
-                         type="range"
-                         min="-20"
-                         max="20"
-                         step="0.5"
-                         value={pitch}
-                         onChange={(e) => setPitch(parseFloat(e.target.value))}
-                         disabled={isMultiSpeaker}
-                         className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer range-thumb-cyan disabled:cursor-not-allowed"
-                     />
                 </div>
             </div>
         </div>
