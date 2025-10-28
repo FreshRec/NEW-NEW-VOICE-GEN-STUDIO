@@ -1,5 +1,4 @@
 import React from 'react';
-// FIX: Corrected import path for icons to be relative.
 import { LogoIcon } from './icons';
 
 const Header: React.FC = () => {
