@@ -43,6 +43,6 @@ jobs:
           AWS_DEFAULT_REGION: 'ru-central1'
         run: |
           
-          aws s3 sync ./dist s3://b1gfjqt37bh45i2g6dbs \
+          aws s3 sync ./dist s3://voicegen-studio \
             --endpoint-url https://storage.yandexcloud.net \
             --delete
