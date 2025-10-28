@@ -63,7 +63,6 @@ const ComparisonView: React.FC<{
 
 
 const EditorTab: React.FC<EditorTabProps> = ({ initialText, onTextChange }) => {
-  const [text, setText] = useState(initialText);
   const [selectedVoice, setSelectedVoice] = useState(VOICES[0].id);
   const [selectedMood, setSelectedMood] = useState<Mood>(MOODS[0].id);
   const [speakingRate, setSpeakingRate] = useState(1.0);
@@ -89,17 +88,13 @@ const EditorTab: React.FC<EditorTabProps> = ({ initialText, onTextChange }) => {
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   useEffect(() => {
-    setText(initialText);
-  }, [initialText]);
-
-  useEffect(() => {
-    const words = text.trim().split(/\s+/).filter(Boolean);
-    setWordCount(text.trim() === '' ? 0 : words.length);
-    setCharCount(text.length);
+    const words = initialText.trim().split(/\s+/).filter(Boolean);
+    setWordCount(initialText.trim() === '' ? 0 : words.length);
+    setCharCount(initialText.length);
 
     // Speaker detection logic
     const speakerRegex = /(?:^|\n)\s*([^:\n]+):/g;
-    const matches = text.matchAll(speakerRegex);
+    const matches = initialText.matchAll(speakerRegex);
     const detectedSpeakers = [...new Set(Array.from(matches, m => m[1].trim()))];
     
     // The multi-speaker API currently supports exactly 2 speakers.
@@ -117,7 +112,7 @@ const EditorTab: React.FC<EditorTabProps> = ({ initialText, onTextChange }) => {
         setSpeakers([]);
         setSpeakerVoices({});
     }
-  }, [text]);
+  }, [initialText]);
 
   // Effect to initialize and clean up AudioContext. Runs only once on mount/unmount.
   useEffect(() => {
@@ -134,55 +129,56 @@ const EditorTab: React.FC<EditorTabProps> = ({ initialText, onTextChange }) => {
     };
   }, []);
 
-  // Effect to handle SpeechRecognition. Depends on text to update the callback closure.
+  // Effect to handle SpeechRecognition.
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = 'ru-RU';
-
-      recognition.onresult = (event) => {
-        let finalTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
-          }
-        }
-        if (finalTranscript) {
-          const newText = (text ? text + ' ' : '') + finalTranscript.trim();
-          setText(newText);
-          onTextChange(newText);
-        }
-      };
-      recognition.onerror = (event) => {
-        console.error('Speech recognition error', event.error);
-        setError(`Ошибка распознавания: ${event.error}`);
-        setIsRecording(false);
-      };
-      recognition.onstart = () => setIsRecording(true);
-      recognition.onend = () => setIsRecording(false);
-      recognitionRef.current = recognition;
-    } else {
+    if (!SpeechRecognition) {
       console.warn('Speech Recognition not supported');
+      return;
     }
+
+    const recognition = new SpeechRecognition() as SpeechRecognition;
+    recognitionRef.current = recognition;
+
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'ru-RU';
+
+    recognition.onresult = (event: any) => {
+      let finalTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        }
+      }
+      if (finalTranscript) {
+        onTextChange(prevText => (prevText ? prevText + ' ' : '') + finalTranscript.trim());
+      }
+    };
+
+    recognition.onerror = (event: { error: string }) => {
+      console.error('Speech recognition error', event.error);
+      setError(`Ошибка распознавания: ${event.error}`);
+      setIsRecording(false);
+    };
+    recognition.onstart = () => setIsRecording(true);
+    recognition.onend = () => setIsRecording(false);
     
     return () => {
-      recognitionRef.current?.stop();
+      recognition.stop();
     };
-  }, [text, onTextChange]);
+  }, [onTextChange]);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setText(e.target.value);
     onTextChange(e.target.value);
   };
   
   const toggleRecording = () => {
+    if (!recognitionRef.current) return;
     if (isRecording) {
-      recognitionRef.current?.stop();
+      recognitionRef.current.stop();
     } else {
-      recognitionRef.current?.start();
+      recognitionRef.current.start();
     }
   };
   
@@ -196,15 +192,15 @@ const EditorTab: React.FC<EditorTabProps> = ({ initialText, onTextChange }) => {
   };
   
   const handleAction = async (action: 'rewrite' | 'poem') => {
-    if (!text.trim()) return;
+    if (!initialText.trim()) return;
     stopPlayback();
     setError(null);
     const actionFunc = action === 'rewrite' ? rewriteText : generatePoem;
     const message = action === 'rewrite' ? 'Переписываю текст...' : 'Создаю стихотворение...';
     setStatus({ loading: true, message, type: action });
     try {
-        const originalText = text;
-        const resultText = await actionFunc(text);
+        const originalText = initialText;
+        const resultText = await actionFunc(initialText);
         setComparisonView({ original: originalText, newText: resultText, type: action });
     } catch (err) {
         setError(err instanceof Error ? err.message : 'Произошла ошибка.');
@@ -214,7 +210,7 @@ const EditorTab: React.FC<EditorTabProps> = ({ initialText, onTextChange }) => {
   };
 
   const handleSynthesize = async () => {
-    if (!text.trim()) { setError("Текстовое поле не может быть пустым."); return; }
+    if (!initialText.trim()) { setError("Текстовое поле не может быть пустым."); return; }
     if (!audioContextRef.current) { setError("AudioContext не инициализирован."); return; }
 
     stopPlayback();
@@ -225,9 +221,9 @@ const EditorTab: React.FC<EditorTabProps> = ({ initialText, onTextChange }) => {
     try {
       let base64Audio: string;
       if (speakers.length === 2) {
-        base64Audio = await synthesizeMultiSpeakerSpeech(text, speakerVoices);
+        base64Audio = await synthesizeMultiSpeakerSpeech(initialText, speakerVoices);
       } else {
-        base64Audio = await synthesizeSpeech(text, selectedVoice, selectedMood, speakingRate, pitch);
+        base64Audio = await synthesizeSpeech(initialText, selectedVoice, selectedMood, speakingRate, pitch);
       }
       const audioData = decode(base64Audio);
       const buffer = await decodeAudioData(audioData, audioContextRef.current, 24000, 1);
@@ -286,7 +282,6 @@ const EditorTab: React.FC<EditorTabProps> = ({ initialText, onTextChange }) => {
         <ComparisonView 
             {...comparisonView}
             onAccept={() => {
-                setText(comparisonView.newText);
                 onTextChange(comparisonView.newText);
                 setComparisonView(null);
             }}
@@ -298,7 +293,7 @@ const EditorTab: React.FC<EditorTabProps> = ({ initialText, onTextChange }) => {
         <h2 className="text-2xl font-bold text-white mb-2">Редактор Текста</h2>
         <div className="relative">
           <textarea
-            value={text}
+            value={initialText}
             onChange={handleTextChange}
             placeholder="Введите, вставьте или надиктуйте текст здесь..."
             className="w-full h-64 p-4 pr-12 bg-gray-900/50 border border-gray-600 rounded-lg text-gray-200 focus:ring-cyan-500 focus:border-cyan-500 transition resize-y"
@@ -314,11 +309,11 @@ const EditorTab: React.FC<EditorTabProps> = ({ initialText, onTextChange }) => {
         </div>
         <div className="flex justify-between items-center mt-2">
             <div className="flex flex-wrap gap-2">
-                <button onClick={() => handleAction('rewrite')} disabled={status.loading || !text.trim()} className="flex items-center space-x-2 px-4 py-2 text-sm font-semibold text-white bg-gray-700 rounded-lg hover:bg-gray-600 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                <button onClick={() => handleAction('rewrite')} disabled={status.loading || !initialText.trim()} className="flex items-center space-x-2 px-4 py-2 text-sm font-semibold text-white bg-gray-700 rounded-lg hover:bg-gray-600 transition disabled:opacity-50 disabled:cursor-not-allowed">
                     {status.loading && status.type === 'rewrite' ? <Spinner small /> : <PencilIcon />}
                     <span>Переписать</span>
                 </button>
-                <button onClick={() => handleAction('poem')} disabled={status.loading || !text.trim()} className="flex items-center space-x-2 px-4 py-2 text-sm font-semibold text-white bg-gray-700 rounded-lg hover:bg-gray-600 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                <button onClick={() => handleAction('poem')} disabled={status.loading || !initialText.trim()} className="flex items-center space-x-2 px-4 py-2 text-sm font-semibold text-white bg-gray-700 rounded-lg hover:bg-gray-600 transition disabled:opacity-50 disabled:cursor-not-allowed">
                     {status.loading && status.type === 'poem' ? <Spinner small /> : <PoemIcon />}
                     <span>сгенерировать стихотворение</span>
                 </button>
