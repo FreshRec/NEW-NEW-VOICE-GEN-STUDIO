@@ -113,10 +113,10 @@ export const synthesizeSpeech = async (
             prebuiltVoiceConfig: {
               voiceName: voice,
             },
+            // FIX: Moved speakingRate and pitch inside voiceConfig according to API specification.
+            speakingRate: speakingRate,
+            pitch: pitch,
           },
-          // FIX: Moved speakingRate and pitch out of voiceConfig. The type error indicates they are not properties of VoiceConfig.
-          speakingRate: speakingRate,
-          pitch: pitch,
         },
       },
     });
